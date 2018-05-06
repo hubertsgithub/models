@@ -19,10 +19,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import sys
 
+from absl import app as absl_app
+from absl import flags
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
+from official.utils.flags import core as flags_core
 from official.resnet import resnet_model
 from official.resnet import resnet_run_loop
 
@@ -39,6 +41,8 @@ _NUM_IMAGES = {
     'train': 50000,
     'validation': 10000,
 }
+
+DATASET_NAME = 'CIFAR-10'
 
 
 ###############################################################################
@@ -103,8 +107,7 @@ def preprocess_image(image, is_training):
   return image
 
 
-def input_fn(is_training, data_dir, batch_size, num_epochs=1,
-             num_parallel_calls=1, multi_gpu=False):
+def input_fn(is_training, data_dir, batch_size, num_epochs=1):
   """Input_fn using the tf.data input pipeline for CIFAR-10 dataset.
 
   Args:
@@ -112,12 +115,6 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1,
     data_dir: The directory containing the input data.
     batch_size: The number of samples per batch.
     num_epochs: The number of epochs to repeat the dataset.
-    num_parallel_calls: The number of records that are processed in parallel.
-      This can be optimized per data set but for generally homogeneous data
-      sets, should be approximately the number of available CPU cores.
-    multi_gpu: Whether this is run multi-GPU. Note that this is only required
-      currently to handle the batch leftovers, and can be removed
-      when that is handled directly by Estimator.
 
   Returns:
     A dataset that can be used for iteration.
@@ -125,12 +122,10 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1,
   filenames = get_filenames(is_training, data_dir)
   dataset = tf.data.FixedLengthRecordDataset(filenames, _RECORD_BYTES)
 
-  num_images = is_training and _NUM_IMAGES['train'] or _NUM_IMAGES['validation']
-
   return resnet_run_loop.process_record_dataset(
       dataset, is_training, batch_size, _NUM_IMAGES['train'],
-      parse_record, num_epochs, num_parallel_calls,
-      examples_per_epoch=num_images, multi_gpu=multi_gpu)
+      parse_record, num_epochs,
+  )
 
 
 def get_synth_input_fn():
@@ -219,30 +214,40 @@ def cifar10_model_fn(features, labels, mode, params):
       version=params['version'],
       loss_scale=params['loss_scale'],
       loss_filter_fn=loss_filter_fn,
-      multi_gpu=params['multi_gpu'],
       dtype=params['dtype']
   )
 
 
-def main(argv):
-  parser = resnet_run_loop.ResnetArgParser()
-  # Set defaults that are reasonable for this model.
-  parser.set_defaults(data_dir='/tmp/cifar10_data',
-                      model_dir='/tmp/cifar10_model',
-                      resnet_size=32,
-                      train_epochs=250,
-                      epochs_between_evals=10,
-                      batch_size=128)
+def define_cifar_flags():
+  resnet_run_loop.define_resnet_flags()
+  flags.adopt_module_key_flags(resnet_run_loop)
+  flags_core.set_defaults(data_dir='/tmp/cifar10_data',
+                          model_dir='/tmp/cifar10_model',
+                          resnet_size='32',
+                          train_epochs=250,
+                          epochs_between_evals=10,
+                          batch_size=128)
 
-  flags = parser.parse_args(args=argv[1:])
 
-  input_function = flags.use_synthetic_data and get_synth_input_fn() or input_fn
+def run_cifar(flags_obj):
+  """Run ResNet CIFAR-10 training and eval loop.
+
+  Args:
+    flags_obj: An object containing parsed flag values.
+  """
+  input_function = (flags_obj.use_synthetic_data and get_synth_input_fn()
+                    or input_fn)
 
   resnet_run_loop.resnet_main(
-      flags, cifar10_model_fn, input_function,
+      flags_obj, cifar10_model_fn, input_function, DATASET_NAME,
       shape=[_HEIGHT, _WIDTH, _NUM_CHANNELS])
+
+
+def main(_):
+  run_cifar(flags.FLAGS)
 
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)
-  main(argv=sys.argv)
+  define_cifar_flags()
+  absl_app.run(main)

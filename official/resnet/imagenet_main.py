@@ -19,10 +19,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import sys
 
+from absl import app as absl_app
+from absl import flags
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
+from official.utils.flags import core as flags_core
 from official.resnet import imagenet_preprocessing
 from official.resnet import resnet_model
 from official.resnet import resnet_run_loop
@@ -39,6 +41,7 @@ _NUM_IMAGES = {
 _NUM_TRAIN_FILES = 1024
 _SHUFFLE_BUFFER = 1500
 
+DATASET_NAME = 'ImageNet'
 
 ###############################################################################
 # Data processing
@@ -154,8 +157,7 @@ def parse_record(raw_record, is_training):
   return image, label
 
 
-def input_fn(is_training, data_dir, batch_size, num_epochs=1,
-             num_parallel_calls=1, multi_gpu=False):
+def input_fn(is_training, data_dir, batch_size, num_epochs=1):
   """Input function which provides batches for train or eval.
 
   Args:
@@ -163,12 +165,6 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1,
     data_dir: The directory containing the input data.
     batch_size: The number of samples per batch.
     num_epochs: The number of epochs to repeat the dataset.
-    num_parallel_calls: The number of records that are processed in parallel.
-      This can be optimized per data set but for generally homogeneous data
-      sets, should be approximately the number of available CPU cores.
-    multi_gpu: Whether this is run multi-GPU. Note that this is only required
-      currently to handle the batch leftovers, and can be removed
-      when that is handled directly by Estimator.
 
   Returns:
     A dataset that can be used for iteration.
@@ -180,15 +176,13 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1,
     # Shuffle the input files
     dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
 
-  num_images = is_training and _NUM_IMAGES['train'] or _NUM_IMAGES['validation']
-
   # Convert to individual records
   dataset = dataset.flat_map(tf.data.TFRecordDataset)
 
   return resnet_run_loop.process_record_dataset(
       dataset, is_training, batch_size, _SHUFFLE_BUFFER, parse_record,
-      num_epochs, num_parallel_calls, examples_per_epoch=num_images,
-      multi_gpu=multi_gpu)
+      num_epochs
+  )
 
 
 def get_synth_input_fn():
@@ -298,28 +292,36 @@ def imagenet_model_fn(features, labels, mode, params):
       version=params['version'],
       loss_scale=params['loss_scale'],
       loss_filter_fn=None,
-      multi_gpu=params['multi_gpu'],
       dtype=params['dtype']
   )
 
 
-def main(argv):
-  parser = resnet_run_loop.ResnetArgParser(
-      resnet_size_choices=[18, 34, 50, 101, 152, 200])
+def define_imagenet_flags():
+  resnet_run_loop.define_resnet_flags(
+      resnet_size_choices=['18', '34', '50', '101', '152', '200'])
+  flags.adopt_module_key_flags(resnet_run_loop)
+  flags_core.set_defaults(train_epochs=100)
 
-  parser.set_defaults(
-      train_epochs=100
-  )
 
-  flags = parser.parse_args(args=argv[1:])
+def run_imagenet(flags_obj):
+  """Run ResNet ImageNet training and eval loop.
 
-  input_function = flags.use_synthetic_data and get_synth_input_fn() or input_fn
+  Args:
+    flags_obj: An object containing parsed flag values.
+  """
+  input_function = (flags_obj.use_synthetic_data and get_synth_input_fn()
+                    or input_fn)
 
   resnet_run_loop.resnet_main(
-      flags, imagenet_model_fn, input_function,
+      flags_obj, imagenet_model_fn, input_function, DATASET_NAME,
       shape=[_DEFAULT_IMAGE_SIZE, _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS])
+
+
+def main(_):
+  run_imagenet(flags.FLAGS)
 
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)
-  main(argv=sys.argv)
+  define_imagenet_flags()
+  absl_app.run(main)
