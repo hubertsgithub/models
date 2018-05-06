@@ -67,7 +67,7 @@ flags.DEFINE_integer('save_interval_secs', 1200,
 flags.DEFINE_integer('save_summaries_secs', 600,
                      'How often, in seconds, we compute the summaries.')
 
-flags.DEFINE_boolean('save_summaries_images', False,
+flags.DEFINE_boolean('save_summaries_images', True,
                      'Save sample inputs, labels, and semantic predictions as images to summary.')
 
 # Settings for training strategy.
@@ -202,7 +202,7 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
       fine_tune_batch_norm=FLAGS.fine_tune_batch_norm)
 
   # add name to graph node so we can add to summary
-  outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE] = tf.identity( 
+  outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE] = tf.identity(
     outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE],
     name = common.OUTPUT_TYPE
   )
@@ -295,7 +295,7 @@ def main(unused_argv):
             tf.uint8)
         summaries.add(tf.summary.image('samples/%s' % common.LABEL, summary_label))
 
-        predictions = tf.cast(tf.expand_dims(tf.argmax(graph.get_tensor_by_name( 
+        predictions = tf.cast(tf.expand_dims(tf.argmax(graph.get_tensor_by_name(
             ('%s/%s:0' % (first_clone_scope, common.OUTPUT_TYPE)).strip('/')),
             3), -1), tf.uint8)
         summaries.add(tf.summary.image('samples/%s' % common.OUTPUT_TYPE, predictions))
