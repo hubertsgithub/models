@@ -26,11 +26,13 @@ import numpy as np
 # Dataset names.
 _CITYSCAPES = 'cityscapes'
 _PASCAL = 'pascal'
+_MINC = 'minc-segmentation'
 
 # Max number of entries in the colormap for each dataset.
 _DATASET_MAX_ENTRIES = {
     _CITYSCAPES: 19,
     _PASCAL: 256,
+    _MINC: 23,
 }
 
 
@@ -64,12 +66,56 @@ def create_cityscapes_label_colormap():
   return colormap
 
 
+def create_minc_segmentation_label_colormap():
+  """Creates a label colormap used in minc segmentation.
+  Copy some of the colors from cityscapes and add a few more.
+
+  Returns:
+    A Colormap for visualizing segmentation results.
+  """
+  colormap = create_pascal_label_colormap()[:23]
+  colormap[5] = [255, 246, 0]   # food
+  colormap[16] = [237, 166, 118]   # skin
+  colormap[14] =  [247, 69, 69]    # plastic
+  colormap[10] = [255, 255, 170]  # mirror
+  #colormap = np.asarray([
+  #    [91, 10, 6],  # brick
+  #    [171, 173, 29],  # carpet
+  #    [203, 204, 201],    # ceramic
+  #    [183, 25, 128], # fabric
+  #    [4, 89, 10], # foliage
+  #    [107, 255, 218], # food
+  #    [74, 145, 127],  # glass
+  #    [76, 50, 10],   # hair
+  #    [209, 125, 0],  # leather
+  #    [97, 0, 209], # metal
+  #    [0, 209, 135],  # mirror
+  #    [255, 255, 255], # other
+  #    [0, 255, 46],   # painted
+  #    [219, 249, 137],     # paper
+  #    [247, 69, 69],      # plastic
+  #    [0, 60, 100],    # polishedstone
+  #    [237, 166, 118],    # skin
+  #    [0, 0, 230],     # sky
+  #    [119, 11, 32],   # stone
+  #    [255, 246, 0],   # tile
+  #    [0, 187, 255],   # wallpaper
+  #    [255, 0, 0],     # water
+  #    [255, 63, 0],   # wood
+  #])
+  return colormap
+
+
 def get_pascal_name():
   return _PASCAL
 
 
 def get_cityscapes_name():
   return _CITYSCAPES
+
+
+def get_minc_segmentation_name():
+  return _MINC
 
 
 def bit_get(val, idx):
@@ -118,6 +164,8 @@ def create_label_colormap(dataset=_PASCAL):
     return create_pascal_label_colormap()
   elif dataset == _CITYSCAPES:
     return create_cityscapes_label_colormap()
+  elif dataset == _MINC:
+    return create_minc_segmentation_label_colormap()
   else:
     raise ValueError('Unsupported dataset.')
 

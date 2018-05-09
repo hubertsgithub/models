@@ -117,11 +117,21 @@ _MINC_SEGMENTATION_INFORMATION = DatasetDescriptor(
     ignore_label=255,
 )
 
+_OLD_MASTERS_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        #'test': 18124, # num of samples in images/test
+        'test': 1812, # num of samples in images/test
+    },
+    num_classes=23,  # Set to same as MINC
+    ignore_label=255, # This doesn't matter since we don't have ground truth labels right now.
+)
+
 _DATASETS_INFORMATION = {
     'cityscapes': _CITYSCAPES_INFORMATION,
     'pascal_voc_seg': _PASCAL_VOC_SEG_INFORMATION,
     'ade20k': _ADE20K_INFORMATION,
     'minc-segmentation': _MINC_SEGMENTATION_INFORMATION,
+    'old-masters': _OLD_MASTERS_INFORMATION,
 }
 
 # Default file pattern of TFRecord of TensorFlow Example.

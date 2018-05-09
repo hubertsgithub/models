@@ -26,7 +26,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-#export CUDA_VISIBLE_DEVICES="0"
+export CUDA_VISIBLE_DEVICES="0"
 
 # Move one-level up to tensorflow/models/research directory.
 cd ..
@@ -73,7 +73,7 @@ cd "${CURRENT_DIR}"
 MINC_SEGMENTATION_DATASET="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/tfrecord"
 
 # Train 10 iterations.
-NUM_ITERATIONS=200000
+NUM_ITERATIONS=400000
 python "${WORK_DIR}"/train.py \
   --logtostderr \
   --train_split="train" \
