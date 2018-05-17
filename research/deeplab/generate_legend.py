@@ -36,7 +36,6 @@ ax = fig.add_subplot(111)
 lines = []
 for i in range(len(MINC_CATEGORIES)):
     lines.append(ax.scatter(0, 0, lw=0.5, s=300, marker='o', edgecolor='k', color=c[i]))
-    #lines.append(ax.scatter(0, 0, lw=0.5, s=300, marker='o', edgecolor='k'))
 
 figlegend.legend(lines, MINC_CATEGORIES, 'center', scatterpoints=1)
 figlegend.savefig('./datasets/legend.png')

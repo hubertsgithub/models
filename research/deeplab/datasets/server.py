@@ -86,9 +86,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         r.append('<body><a href="%s"><img src="%s"></img></a></body>'\
             % (os.path.join('./',nextname), os.path.join('./',filename_pred) ))
         r.append('<body><img src="%s" height="500"></a></body>'\
-            #% (os.path.join(os.path.dirname(os.getcwd()),'legend.png')))
-            #% (os.path.join(DEEPLAB_DATASET_PATH, 'legend.png'), '\%'))
-            #% (legend_path, r'%'))
             % ('legend.png'))
         r.append('</html>')
 

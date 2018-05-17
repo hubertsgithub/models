@@ -25,6 +25,19 @@ from PIL import Image
 
 FLAGS = tf.app.flags.FLAGS
 
+## TODO training and test images will overlap right now
+## TODO generate splits
+## Currently, treat all images with labels as training images
+
+tf.app.flags.DEFINE_string(
+    'train_image_folder',
+    './old-masters/images_preprocessed',
+    'Folder containing training images')
+tf.app.flags.DEFINE_string(
+    'train_image_label_folder',
+    './old-masters/labels_preprocessed',
+    'Folder containing annotations for training images')
+
 tf.app.flags.DEFINE_string(
     'test_image_folder',
     './old-masters/images_preprocessed',
@@ -32,7 +45,6 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_string(
     'test_image_label_folder',
     None,
-    #'./old-masters/labels_preprocessed',
     'Folder containing annotations for test images')
 
 tf.app.flags.DEFINE_string(
@@ -41,7 +53,7 @@ tf.app.flags.DEFINE_string(
 
 _NUM_SHARDS = 4
 
-def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dummy_label=True):
+def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dummy_label=False):
   """ Converts the old-masters dataset into into tfrecord format (SSTable).
 
   Args:
@@ -56,11 +68,20 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dummy_label=
       dummy_label = True
 
   img_names = tf.gfile.Glob(os.path.join(dataset_dir, '*.jpg'))
+
   random.shuffle(img_names)
 
   if dummy_label:
       pass
   else:
+    label_names = tf.gfile.Glob(os.path.join(dataset_label_dir, '*.png'))
+    print len(label_names)
+
+    if len(label_names) < len(img_names):
+        img_names = label_names
+        img_names = [img_name.replace('.png', '.jpg').replace(dataset_label_dir, dataset_dir) for img_name in img_names]
+        print 'Not every image is labelled; only preprocessing labelled images'
+
     seg_names = []
     for f in img_names:
         # get the filename without the extension
@@ -116,13 +137,15 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dummy_label=
         tfrecord_writer.write(example.SerializeToString())
     sys.stdout.write('\n')
     sys.stdout.flush()
-    sys.stderr.write('\n***Removing {}'.format(temp_name))
-    sys.stderr.flush()
-    os.remove(temp_name)
+    if dummy_label:
+        sys.stderr.write('\n***Removing {}'.format(temp_name))
+        sys.stderr.flush()
+        os.remove(temp_name)
 
 def main(unused_argv):
   tf.gfile.MakeDirs(FLAGS.output_dir)
-  _convert_dataset('test', FLAGS.test_image_folder, FLAGS.test_image_label_folder)
+  #_convert_dataset('test', FLAGS.test_image_folder, FLAGS.test_image_label_folder)
+  _convert_dataset('train', FLAGS.train_image_folder, FLAGS.train_image_label_folder)
 
 if __name__ == '__main__':
   tf.app.run()

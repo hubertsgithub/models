@@ -29,16 +29,16 @@ mkdir -p "${EXPORT_DIR}"
 # Visualize the results.
 python "${WORK_DIR}"/vis.py \
   --logtostderr \
-  --vis_split="test" \
+  --vis_split="val" \
   --model_variant="xception_65" \
-  --atrous_rates=6 \
   --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
+  --atrous_rates=24 \
+  --atrous_rates=36 \
+  --output_stride=8 \
+  --resize_factor=8 \
   --decoder_output_stride=4 \
   --vis_crop_size=513 \
   --vis_crop_size=513 \
-  --resize_factor=16 \
   --checkpoint_dir="${TRAIN_LOGDIR}" \
   --vis_logdir="${VIS_LOGDIR}" \
   --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
@@ -46,3 +46,8 @@ python "${WORK_DIR}"/vis.py \
   --colormap_type=minc-segmentation \
   --max_number_of_iterations=1
 
+#  --atrous_rates=6 \
+#  --atrous_rates=12 \
+#  --atrous_rates=18 \
+#  --output_stride=16 \
+#  --resize_factor=16 \
