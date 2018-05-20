@@ -371,7 +371,8 @@ def xception(inputs,
              keep_prob=0.5,
              output_stride=None,
              reuse=None,
-             scope=None):
+             scope=None,
+             hints=False):
   """Generator for Xception models.
 
   This function generates a family of Xception models. See the xception_*()
@@ -427,6 +428,15 @@ def xception(inputs,
             raise ValueError('The output_stride needs to be a multiple of 2.')
           output_stride /= 2
         # Root block function operated on inputs.
+        if hints:
+            print '***DEBUG core/xception.py'
+            print 'Input image contains hints in 4th channel. Initializing reshape conv layer.'
+            # Use conv layer to take input from (...,4) to (...,3)
+            # Use linear activation...? TODO
+            net = tf.contrib.layers.conv2d(net, 3, 1, stride=1,
+                                           padding='SAME', scope='entry_flow/initial',
+                                           activation=tf.nn.relu) # TODO unsure if best move is 1x1 conv or other
+
         net = resnet_utils.conv2d_same(net, 32, 3, stride=2,
                                        scope='entry_flow/conv1_1')
         net = resnet_utils.conv2d_same(net, 64, 3, stride=1,
@@ -502,7 +512,8 @@ def xception_65(inputs,
                 regularize_depthwise=False,
                 multi_grid=None,
                 reuse=None,
-                scope='xception_65'):
+                scope='xception_65',
+                hints=False):
   """Xception-65 model."""
   blocks = [
       xception_block('entry_flow/block1',
@@ -557,7 +568,8 @@ def xception_65(inputs,
                   keep_prob=keep_prob,
                   output_stride=output_stride,
                   reuse=reuse,
-                  scope=scope)
+                  scope=scope,
+                  hints=hints)
 
 
 def xception_arg_scope(weight_decay=0.00004,
