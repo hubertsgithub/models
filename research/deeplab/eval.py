@@ -123,7 +123,10 @@ def main(unused_argv):
     predictions = predictions[common.OUTPUT_TYPE]
     predictions = tf.reshape(predictions, shape=[-1])
     labels = tf.reshape(samples[common.LABEL], shape=[-1])
-    weights = tf.to_float(tf.not_equal(labels, dataset.ignore_label))
+
+    #weights = tf.to_float(tf.not_equal(labels, dataset.ignore_label))
+    weights = tf.multiply(tf.to_float(tf.not_equal(labels, dataset.ignore_label)),
+                          tf.to_float(tf.not_equal(labels, dataset.background_label))) ## Also ignore background labels (default background_label is set to ignore_label so background is only ignored if explicitly specified in dataset descriptor).
 
     # Set ignore_label regions to label 0, because metrics.mean_iou requires
     # range of labels = [0, dataset.num_classes). Note the ignore_label regions
