@@ -159,7 +159,8 @@ def extract_features(images,
                      regularize_depthwise=False,
                      preprocess_images=True,
                      num_classes=None,
-                     global_pool=False):
+                     global_pool=False,
+                     hints=False):
   """Extracts features by the particular model_variant.
 
   Args:
@@ -212,7 +213,8 @@ def extract_features(images,
             regularize_depthwise=regularize_depthwise,
             multi_grid=multi_grid,
             reuse=reuse,
-            scope=name_scope[model_variant])
+            scope=name_scope[model_variant],
+            hints=hints)
   elif 'mobilenet' in model_variant:
     arg_scope = arg_scopes_map[model_variant](
         is_training=(is_training and fine_tune_batch_norm),

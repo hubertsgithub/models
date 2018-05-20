@@ -26,6 +26,7 @@ _PROB_OF_FLIP = 0.5
 
 def preprocess_image_and_label(image,
                                label,
+                               hint,
                                crop_height,
                                crop_width,
                                min_resize_value=None,
@@ -42,6 +43,7 @@ def preprocess_image_and_label(image,
   Args:
     image: Input image.
     label: Ground truth annotation label.
+    hint: hints for network; single channel that will be concatenated with image.
     crop_height: The height value used to crop the image and label.
     crop_width: The width value used to crop the image and label.
     min_resize_value: Desired size of the smaller image side.
@@ -62,6 +64,7 @@ def preprocess_image_and_label(image,
     original_image: Original image (could be resized).
     processed_image: Preprocessed image.
     label: Preprocessed ground truth segmentation label.
+    hint: Preprocessed hint channel.
 
   Raises:
     ValueError: Ground truth label not provided during training.
@@ -81,9 +84,13 @@ def preprocess_image_and_label(image,
   if label is not None:
     label = tf.cast(label, tf.int32)
 
+  if hint is not None:
+    hint = tf.cast(hint, tf.int32)  # cast to same type as label for manipulation.
+                                      # Need to cast to same type as image later so can concatenate later.
+
   # Resize image and label to the desired range.
   if min_resize_value is not None or max_resize_value is not None:
-    [processed_image, label] = (
+    [processed_image, label, hint] = (
         preprocess_utils.resize_to_range(
             image=processed_image,
             label=label,
@@ -97,7 +104,7 @@ def preprocess_image_and_label(image,
   # Data augmentation by randomly scaling the inputs.
   scale = preprocess_utils.get_random_scale(
       min_scale_factor, max_scale_factor, scale_factor_step_size)
-  processed_image, label = preprocess_utils.randomly_scale_image_and_label(
+  processed_image, label, hint = preprocess_utils.randomly_scale_image_and_label(
       processed_image, label, scale)
   processed_image.set_shape([None, None, 3])
 
@@ -119,8 +126,15 @@ def preprocess_image_and_label(image,
     label = preprocess_utils.pad_to_bounding_box(
         label, 0, 0, target_height, target_width, ignore_label)
 
-  # Randomly crop the image and label.
-  if is_training and label is not None:
+  if hint is not None:
+    hint = preprocess_utils.pad_to_bounding_box(
+        hint, 0, 0, target_height, target_width, ignore_label)
+
+  # Randomly crop the image and label (and hint if appropriate).
+  if is_training and label is not None and hint is not None:
+    processed_image, label, hint = preprocess_utils.random_crop(
+        [processed_image, label, hint], crop_height, crop_width)
+  elif is_training and label is not None:
     processed_image, label = preprocess_utils.random_crop(
         [processed_image, label], crop_height, crop_width)
 
@@ -129,9 +143,16 @@ def preprocess_image_and_label(image,
   if label is not None:
     label.set_shape([crop_height, crop_width, 1])
 
+  if hint is not None:
+    hint.set_shape([crop_height, crop_width, 1])
+
   if is_training:
     # Randomly left-right flip the image and label.
-    processed_image, label, _ = preprocess_utils.flip_dim(
-        [processed_image, label], _PROB_OF_FLIP, dim=1)
+    if hint is not None:
+        processed_image, label, hint,  _ = preprocess_utils.flip_dim(
+            [processed_image, label, hint], _PROB_OF_FLIP, dim=1)
+    else:
+        processed_image, label, _ = preprocess_utils.flip_dim(
+            [processed_image, label], _PROB_OF_FLIP, dim=1)
 
-  return original_image, processed_image, label
+  return original_image, processed_image, label, hint

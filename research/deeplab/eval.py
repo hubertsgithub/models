@@ -67,6 +67,11 @@ flags.DEFINE_multi_float('eval_scales', [1.0],
 flags.DEFINE_bool('add_flipped_images', False,
                   'Add flipped images for evaluation or not.')
 
+# hints=True for image inputs with additional channel for hints
+# TODO incorporate this into ModelOptions
+flags.DEFINE_bool('hints', False,
+                  'Input has additional hint channel or not.')
+
 # Dataset settings.
 
 flags.DEFINE_string('dataset', 'pascal_voc_seg',
@@ -103,6 +108,12 @@ def main(unused_argv):
         is_training=False,
         model_variant=FLAGS.model_variant)
 
+    if FLAGS.hints:
+        model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
+        print '***DEBUG common.HINT is currently set to LABEL in eval.py TODO'
+    else:
+        model_inputs = samples[common.IMAGE]
+
     model_options = common.ModelOptions(
         outputs_to_num_classes={common.OUTPUT_TYPE: dataset.num_classes},
         crop_size=FLAGS.eval_crop_size,
@@ -111,15 +122,17 @@ def main(unused_argv):
 
     if tuple(FLAGS.eval_scales) == (1.0,):
       tf.logging.info('Performing single-scale test.')
-      predictions = model.predict_labels(samples[common.IMAGE], model_options,
-                                         image_pyramid=FLAGS.image_pyramid)
+      predictions = model.predict_labels(model_inputs, model_options,
+                                         image_pyramid=FLAGS.image_pyramid,
+                                         hints=FLAGS.hints)
     else:
       tf.logging.info('Performing multi-scale test.')
       predictions = model.predict_labels_multi_scale(
-          samples[common.IMAGE],
+          model_inputs,
           model_options=model_options,
           eval_scales=FLAGS.eval_scales,
-          add_flipped_images=FLAGS.add_flipped_images)
+          add_flipped_images=FLAGS.add_flipped_images,
+          hints=FLAGS.hints)
     predictions = predictions[common.OUTPUT_TYPE]
     predictions = tf.reshape(predictions, shape=[-1])
     labels = tf.reshape(samples[common.LABEL], shape=[-1])

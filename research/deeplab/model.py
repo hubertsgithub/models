@@ -89,7 +89,8 @@ def get_extra_layer_scopes(last_layers_contain_logits_only=False):
 def predict_labels_multi_scale(images,
                                model_options,
                                eval_scales=(1.0,),
-                               add_flipped_images=False):
+                               add_flipped_images=False,
+                               hints=False):
   """Predicts segmentation labels.
 
   Args:
@@ -115,7 +116,8 @@ def predict_labels_multi_scale(images,
           model_options=model_options,
           image_pyramid=[image_scale],
           is_training=False,
-          fine_tune_batch_norm=False)
+          fine_tune_batch_norm=False,
+          hints=hints)
 
     if add_flipped_images:
       with tf.variable_scope(tf.get_variable_scope(), reuse=True):
@@ -124,7 +126,8 @@ def predict_labels_multi_scale(images,
             model_options=model_options,
             image_pyramid=[image_scale],
             is_training=False,
-            fine_tune_batch_norm=False)
+            fine_tune_batch_norm=False,
+            hints=hints)
 
     for output in sorted(outputs_to_scales_to_logits):
       scales_to_logits = outputs_to_scales_to_logits[output]
@@ -154,7 +157,7 @@ def predict_labels_multi_scale(images,
   return outputs_to_predictions
 
 
-def predict_labels(images, model_options, image_pyramid=None):
+def predict_labels(images, model_options, image_pyramid=None, hints=False):
   """Predicts segmentation labels.
 
   Args:
@@ -172,7 +175,8 @@ def predict_labels(images, model_options, image_pyramid=None):
       model_options=model_options,
       image_pyramid=image_pyramid,
       is_training=False,
-      fine_tune_batch_norm=False)
+      fine_tune_batch_norm=False,
+      hints=hints)
 
   predictions = {}
   for output in sorted(outputs_to_scales_to_logits):
@@ -207,7 +211,8 @@ def multi_scale_logits(images,
                        image_pyramid,
                        weight_decay=0.0001,
                        is_training=False,
-                       fine_tune_batch_norm=False):
+                       fine_tune_batch_norm=False,
+                       hints=False):
   """Gets the logits for multi-scale inputs.
 
   The returned logits are all downsampled (due to max-pooling layers)
@@ -293,7 +298,8 @@ def multi_scale_logits(images,
         weight_decay=weight_decay,
         reuse=True if count else None,
         is_training=is_training,
-        fine_tune_batch_norm=fine_tune_batch_norm)
+        fine_tune_batch_norm=fine_tune_batch_norm,
+        hints=hints)
 
     # Resize the logits to have the same dimension before merging.
     for output in sorted(outputs_to_logits):
@@ -335,7 +341,8 @@ def _extract_features(images,
                       weight_decay=0.0001,
                       reuse=None,
                       is_training=False,
-                      fine_tune_batch_norm=False):
+                      fine_tune_batch_norm=False,
+                      hints=False):
   """Extracts features by the particular model_variant.
 
   Args:
@@ -361,7 +368,8 @@ def _extract_features(images,
       weight_decay=weight_decay,
       reuse=reuse,
       is_training=is_training,
-      fine_tune_batch_norm=fine_tune_batch_norm)
+      fine_tune_batch_norm=fine_tune_batch_norm,
+      hints=hints)
 
   if not model_options.aspp_with_batch_norm:
     return features, end_points
@@ -438,7 +446,8 @@ def _get_logits(images,
                 weight_decay=0.0001,
                 reuse=None,
                 is_training=False,
-                fine_tune_batch_norm=False):
+                fine_tune_batch_norm=False,
+                hints=False):
   """Gets the logits by atrous/image spatial pyramid pooling.
 
   Args:
@@ -458,7 +467,8 @@ def _get_logits(images,
       weight_decay=weight_decay,
       reuse=reuse,
       is_training=is_training,
-      fine_tune_batch_norm=fine_tune_batch_norm)
+      fine_tune_batch_norm=fine_tune_batch_norm,
+      hints=hints)
 
   if model_options.decoder_output_stride is not None:
     decoder_height = scale_dimension(model_options.crop_size[0],

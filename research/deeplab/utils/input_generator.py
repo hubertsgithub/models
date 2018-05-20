@@ -56,7 +56,11 @@ def _get_data(data_provider, dataset_split):
   if dataset_split != common.TEST_SET:
     label, = data_provider.get([common.LABELS_CLASS])
 
-  return image, label, image_name, height, width
+  hint = None
+  if common.HINT in data_provider.list_items():
+      hint, = data_provider.get([common.HINT])
+
+  return image, label, hint, image_name, height, width
 
 
 def get(dataset,
@@ -72,7 +76,8 @@ def get(dataset,
         num_threads=1,
         dataset_split=None,
         is_training=True,
-        model_variant=None):
+        model_variant=None,
+        ):
   """Gets the dataset split for semantic segmentation.
 
   This functions gets the dataset split for semantic segmentation. In
@@ -119,7 +124,8 @@ def get(dataset,
       num_readers=num_readers,
       num_epochs=None if is_training else 1,
       shuffle=is_training)
-  image, label, image_name, height, width = _get_data(data_provider,
+
+  image, label, hint, image_name, height, width = _get_data(data_provider,
                                                       dataset_split)
   if label is not None:
     if label.shape.ndims == 2:
@@ -129,11 +135,22 @@ def get(dataset,
     else:
       raise ValueError('Input label shape must be [height, width], or '
                        '[height, width, 1].')
-
     label.set_shape([None, None, 1])
-  original_image, image, label = input_preprocess.preprocess_image_and_label(
+
+  if hint is not None:
+    if hint.shape.ndims == 2:
+      hint = tf.expand_dims(label, 2)
+    elif hint.shape.ndims == 3 and hint.shape.dims[2] == 1:
+      pass
+    else:
+      raise ValueError('Input hint shape must be [height, width], or '
+                       '[height, width, 1].')
+    hint.set_shape([None, None, 1])
+
+  original_image, image, label, hint = input_preprocess.preprocess_image_and_label(
       image,
       label,
+      hint,
       crop_height=crop_size[0],
       crop_width=crop_size[1],
       min_resize_value=min_resize_value,
@@ -144,15 +161,20 @@ def get(dataset,
       scale_factor_step_size=scale_factor_step_size,
       ignore_label=dataset.ignore_label,
       is_training=is_training,
-      model_variant=model_variant)
+      model_variant=model_variant,
+      )
   sample = {
       common.IMAGE: image,
       common.IMAGE_NAME: image_name,
       common.HEIGHT: height,
-      common.WIDTH: width
+      common.WIDTH: width,
   }
   if label is not None:
     sample[common.LABEL] = label
+
+  # If network accepts hints
+  if hint is not None:
+    sample[common.HINT] = hint
 
   if not is_training:
     # Original image is only used during visualization.

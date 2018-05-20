@@ -113,6 +113,11 @@ flags.DEFINE_float('last_layer_gradient_multiplier', 1.0,
 flags.DEFINE_boolean('upsample_logits', True,
                      'Upsample logits during training.')
 
+# hints=True for image inputs with additional channel for hints
+# TODO incorporate this into ModelOptions
+flags.DEFINE_bool('hints', False,
+                  'Image has additional hint channel or not.')
+
 # Settings for fine-tuning the network.
 
 flags.DEFINE_string('tf_initial_checkpoint', None,
@@ -164,7 +169,7 @@ flags.DEFINE_string('train_split', 'train',
 flags.DEFINE_string('dataset_dir', None, 'Where the dataset reside.')
 
 
-def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
+def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label, hints=False):
   """Builds a clone of DeepLab.
 
   Args:
@@ -188,18 +193,30 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
   samples[common.IMAGE] = tf.identity(samples[common.IMAGE], name = common.IMAGE)
   samples[common.LABEL] = tf.identity(samples[common.LABEL], name = common.LABEL)
 
+  print samples[common.IMAGE].shape
+
+  if hints:
+      model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
+      print '***DEBUG common.HINT is currently set to LABEL in train.py TODO'
+  else:
+      model_inputs = samples[common.IMAGE]
+  print model_inputs.shape
+  #raise Exception()
+
   model_options = common.ModelOptions(
       outputs_to_num_classes=outputs_to_num_classes,
       crop_size=FLAGS.train_crop_size,
       atrous_rates=FLAGS.atrous_rates,
       output_stride=FLAGS.output_stride)
   outputs_to_scales_to_logits = model.multi_scale_logits(
-      samples[common.IMAGE],
+      #samples[common.IMAGE],
+      model_inputs,
       model_options=model_options,
       image_pyramid=FLAGS.image_pyramid,
       weight_decay=FLAGS.weight_decay,
       is_training=True,
-      fine_tune_batch_norm=FLAGS.fine_tune_batch_norm)
+      fine_tune_batch_norm=FLAGS.fine_tune_batch_norm,
+      hints=hints)
 
   # add name to graph node so we can add to summary
   outputs_to_scales_to_logits[common.OUTPUT_TYPE][model._MERGED_LOGITS_SCOPE] = tf.identity(
@@ -269,7 +286,7 @@ def main(unused_argv):
       model_fn = _build_deeplab
       model_args = (inputs_queue, {
           common.OUTPUT_TYPE: dataset.num_classes
-      }, dataset.ignore_label)
+      }, dataset.ignore_label, FLAGS.hints)
       clones = model_deploy.create_clones(config, model_fn, args=model_args)
 
       # Gather update_ops from the first clone. These contain, for example,

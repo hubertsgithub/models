@@ -105,6 +105,9 @@ def get_model_init_fn(train_logdir,
   if not initialize_last_layer:
     exclude_list.extend(last_layers)
 
+  #print 'REMOVE DEBUG IN TRAIN_UTILS.PY ***'  # If don't want to init first layer weights
+  #exclude_list.extend('xception_65/entry_flow/conv1_1/weights')
+
   variables_to_restore = slim.get_variables_to_restore(exclude=exclude_list)
 
   return slim.assign_from_checkpoint_fn(

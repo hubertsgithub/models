@@ -435,7 +435,7 @@ def xception(inputs,
             # Use linear activation...? TODO
             net = tf.contrib.layers.conv2d(net, 3, 1, stride=1,
                                            padding='SAME', scope='entry_flow/initial',
-                                           activation=tf.nn.relu) # TODO unsure if best move is 1x1 conv or other
+                                           activation_fn=tf.nn.relu) # TODO unsure if best move is 1x1 conv or other
 
         net = resnet_utils.conv2d_same(net, 32, 3, stride=2,
                                        scope='entry_flow/conv1_1')

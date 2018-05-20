@@ -282,7 +282,7 @@ def get_random_scale(min_scale_factor, max_scale_factor, step_size):
   return shuffled_scale_factors[0]
 
 
-def randomly_scale_image_and_label(image, label=None, scale=1.0):
+def randomly_scale_image_and_label(image, label=None, hint=None, scale=1.0):
   """Randomly scales image and label.
 
   Args:
@@ -295,7 +295,7 @@ def randomly_scale_image_and_label(image, label=None, scale=1.0):
   """
   # No random scaling if scale == 1.
   if scale == 1.0:
-    return image, label
+    return image, label, hint
   image_shape = tf.shape(image)
   new_dim = tf.to_int32(tf.to_float([image_shape[0], image_shape[1]]) * scale)
 
@@ -311,7 +311,13 @@ def randomly_scale_image_and_label(image, label=None, scale=1.0):
         new_dim,
         align_corners=True), [0])
 
-  return image, label
+  if hint is not None:
+    hint = tf.squeeze(tf.image.resize_nearest_neighbor(
+        tf.expand_dims(hint, 0),
+        new_dim,
+        align_corners=True), [0])
+
+  return image, label, hint
 
 
 def resolve_shape(tensor, rank=None, scope=None):
@@ -345,6 +351,7 @@ def resolve_shape(tensor, rank=None, scope=None):
 
 def resize_to_range(image,
                     label=None,
+                    hint=None,
                     min_size=None,
                     max_size=None,
                     factor=None,
@@ -442,4 +449,21 @@ def resize_to_range(image,
       new_tensor_list.append(resized_label)
     else:
       new_tensor_list.append(None)
+
+    if hint is not None:
+      if label_layout_is_chw:
+        # Input label has shape [channel, height, width].
+        resized_hint = tf.expand_dims(hint, 3)
+        resized_hint = tf.image.resize_nearest_neighbor(
+            resized_hint, new_size, align_corners=align_corners)
+        resized_hint = tf.squeeze(resized_hint, 3)
+      else:
+        # Input label has shape [height, width, channel].
+        resized_hint = tf.image.resize_images(
+            hint, new_size, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR,
+            align_corners=align_corners)
+      new_tensor_list.append(resized_hint)
+    else:
+      new_tensor_list.append(None)
+
     return new_tensor_list
