@@ -452,7 +452,7 @@ def resize_to_range(image,
 
     if hint is not None:
       if label_layout_is_chw:
-        # Input label has shape [channel, height, width].
+        # Input hint has shape [channel, height, width] (hints assumed to have same format as label)
         resized_hint = tf.expand_dims(hint, 3)
         resized_hint = tf.image.resize_nearest_neighbor(
             resized_hint, new_size, align_corners=align_corners)

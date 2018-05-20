@@ -94,6 +94,7 @@ def preprocess_image_and_label(image,
         preprocess_utils.resize_to_range(
             image=processed_image,
             label=label,
+            hint=hint,
             min_size=min_resize_value,
             max_size=max_resize_value,
             factor=resize_factor,
@@ -105,7 +106,7 @@ def preprocess_image_and_label(image,
   scale = preprocess_utils.get_random_scale(
       min_scale_factor, max_scale_factor, scale_factor_step_size)
   processed_image, label, hint = preprocess_utils.randomly_scale_image_and_label(
-      processed_image, label, scale)
+      processed_image, label, hint, scale)
   processed_image.set_shape([None, None, 3])
 
   # Pad image and label to have dimensions >= [crop_height, crop_width]
@@ -127,6 +128,7 @@ def preprocess_image_and_label(image,
         label, 0, 0, target_height, target_width, ignore_label)
 
   if hint is not None:
+    print 'IN INPUT PREPROCESS {}'.format(hint)
     hint = preprocess_utils.pad_to_bounding_box(
         hint, 0, 0, target_height, target_width, ignore_label)
 
