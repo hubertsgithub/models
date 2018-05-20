@@ -66,13 +66,25 @@ _ITEMS_TO_DESCRIPTIONS = {
 }
 
 # Named tuple to describe the dataset properties.
-DatasetDescriptor = collections.namedtuple(
-    'DatasetDescriptor',
-    ['splits_to_sizes',   # Splits of the dataset into training, val, and test.
-     'num_classes',   # Number of semantic classes.
-     'ignore_label',  # Ignore label value.
-    ]
-)
+def DatasetDescriptor(splits_to_sizes, num_classes, ignore_label, background_label=None):
+    DatasetDescriptor = collections.namedtuple(
+        'DatasetDescriptor',
+        ['splits_to_sizes',   # Splits of the dataset into training, val, and test.
+        'num_classes',   # Number of semantic classes.
+        'ignore_label',  # Ignore label value.
+        'background_label',  # Background class label value.
+        ]
+    )
+
+    if background_label is None:
+        background_label = ignore_label
+
+    return DatasetDescriptor(
+        splits_to_sizes,
+        num_classes,
+        ignore_label,
+        background_label)
+
 
 _CITYSCAPES_INFORMATION = DatasetDescriptor(
     splits_to_sizes={
@@ -115,6 +127,7 @@ _MINC_SEGMENTATION_INFORMATION = DatasetDescriptor(
     },
     num_classes=23,
     ignore_label=255,
+    background_label=11,
 )
 
 _OLD_MASTERS_INFORMATION = DatasetDescriptor(
@@ -129,12 +142,14 @@ _OLD_MASTERS_INFORMATION = DatasetDescriptor(
 
 _COCO_INFORMATION = DatasetDescriptor(
     splits_to_sizes = {
-        'train': 16000, # num of samples in images/test
-        #'test': 18124, # num of samples in images/test
-        #'test': 1812, # num of samples in images/test
+        'train': 63495, # num of samples in images/train
+        'train10kseg': 3096, # num of samples in images/train  # mean 3.23 segs per img. #TODO use median instead
+        'train20kseg': 6192, # num of samples in images/train
+        'train50kseg': 15480, # num of samples in images/train
     },
-    num_classes=20,  # Set classes to same as VOC but 255 is background instead of 0. I think 0 is mapped to background. Unsure.
-    ignore_label=255,
+    num_classes=21,  # Set classes to same as VOC.
+    ignore_label=255, # Shouldn't be any ignore in labels (all non class labels are set to background).
+    background_label=0,
 )
 
 _DATASETS_INFORMATION = {
@@ -180,6 +195,10 @@ def get_dataset(dataset_name, split_name, dataset_dir):
   num_classes = _DATASETS_INFORMATION[dataset_name].num_classes
   ignore_label = _DATASETS_INFORMATION[dataset_name].ignore_label
 
+  background_label = _DATASETS_INFORMATION[dataset_name].background_label
+  print '***Background label is {}'.format(background_label)
+  print '***Ignore label is {}'.format(ignore_label)
+
   file_pattern = _FILE_PATTERN
   file_pattern = os.path.join(dataset_dir, file_pattern % split_name)
 
@@ -224,6 +243,7 @@ def get_dataset(dataset_name, split_name, dataset_dir):
       num_samples=splits_to_sizes[split_name],
       items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
       ignore_label=ignore_label,
+      background_label=background_label,
       num_classes=num_classes,
       name=dataset_name,
       multi_label=True)
