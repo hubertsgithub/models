@@ -72,8 +72,8 @@ flags.DEFINE_bool('add_flipped_images', False,
 
 # hints=True for image inputs with additional channel for hints
 # TODO incorporate this into ModelOptions
-flags.DEFINE_bool('hints', False,
-                  'Input has additional hint channel or not.')
+flags.DEFINE_bool('class_hints', False,
+                  'Input has additional class hint channel or not.')
 
 # Dataset settings.
 
@@ -227,7 +227,7 @@ def main(unused_argv):
         atrous_rates=FLAGS.atrous_rates,
         output_stride=FLAGS.output_stride)
 
-    if FLAGS.hints:
+    if FLAGS.class_hints:
         model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
         print '***DEBUG common.HINT is currently set to LABEL in eval.py TODO'
     else:
@@ -238,14 +238,16 @@ def main(unused_argv):
       predictions = model.predict_labels(
           model_inputs,
           model_options=model_options,
-          image_pyramid=FLAGS.image_pyramid)
+          image_pyramid=FLAGS.image_pyramid,
+          hints=FLAGS.class_hints)
     else:
       tf.logging.info('Performing multi-scale test.')
       predictions = model.predict_labels_multi_scale(
           model_inputs,
           model_options=model_options,
           eval_scales=FLAGS.eval_scales,
-          add_flipped_images=FLAGS.add_flipped_images)
+          add_flipped_images=FLAGS.add_flipped_images,
+          hints=FLAGS.class_hints)
     predictions = predictions[common.OUTPUT_TYPE]
 
     if FLAGS.min_resize_value and FLAGS.max_resize_value:

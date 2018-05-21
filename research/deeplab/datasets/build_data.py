@@ -41,6 +41,9 @@ tf.app.flags.DEFINE_enum('image_format', 'png', ['jpg', 'jpeg', 'png'],
 tf.app.flags.DEFINE_enum('label_format', 'png', ['png'],
                          'Segmentation label format.')
 
+tf.app.flags.DEFINE_enum('hint_format', 'png', ['png'],
+                         'Hint channel format.')
+
 # A map from image format to expected data format.
 _IMAGE_FORMAT_MAP = {
     'jpg': 'jpeg',
@@ -132,7 +135,7 @@ def _bytes_list_feature(values):
   return tf.train.Feature(bytes_list=tf.train.BytesList(value=[norm2bytes(values)]))
 
 
-def image_seg_to_tfexample(image_data, filename, height, width, seg_data):
+def image_seg_to_tfexample(image_data, filename, height, width, seg_data, class_hint_data=''):
   """Converts one image/segmentation pair to tf example.
 
   Args:
@@ -141,9 +144,10 @@ def image_seg_to_tfexample(image_data, filename, height, width, seg_data):
     height: image height.
     width: image width.
     seg_data: string of semantic segmentation data.
+    hint_data: string of input hint data.
 
   Returns:
-    tf example of one image/segmentation pair.
+    tf example of one image/segmentation/hint tuple.
   """
   return tf.train.Example(features=tf.train.Features(feature={
       'image/encoded': _bytes_list_feature(image_data),
@@ -157,4 +161,8 @@ def image_seg_to_tfexample(image_data, filename, height, width, seg_data):
           _bytes_list_feature(seg_data)),
       'image/segmentation/class/format': _bytes_list_feature(
           FLAGS.label_format),
+      'image/hint/class/encoded': (
+          _bytes_list_feature(class_hint_data)),
+      'image/hint/class/format': _bytes_list_feature(
+          FLAGS.hint_format),
   }))

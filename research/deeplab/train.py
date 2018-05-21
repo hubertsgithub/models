@@ -115,8 +115,8 @@ flags.DEFINE_boolean('upsample_logits', True,
 
 # hints=True for image inputs with additional channel for hints
 # TODO incorporate this into ModelOptions
-flags.DEFINE_bool('hints', False,
-                  'Image has additional hint channel or not.')
+flags.DEFINE_bool('class_hints', False,
+                  'Input has additional class hint channel or not.')
 
 # Settings for fine-tuning the network.
 
@@ -286,7 +286,7 @@ def main(unused_argv):
       model_fn = _build_deeplab
       model_args = (inputs_queue, {
           common.OUTPUT_TYPE: dataset.num_classes
-      }, dataset.ignore_label, FLAGS.hints)
+      }, dataset.ignore_label, FLAGS.class_hints)
       clones = model_deploy.create_clones(config, model_fn, args=model_args)
 
       # Gather update_ops from the first clone. These contain, for example,

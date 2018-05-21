@@ -53,6 +53,11 @@ flags.DEFINE_multi_float('inference_scales', [1.0],
 flags.DEFINE_bool('add_flipped_images', False,
                   'Add flipped images during inference or not.')
 
+# hints=True for image inputs with additional channel for hints
+# TODO incorporate this into ModelOptions
+flags.DEFINE_bool('class_hints', False,
+                  'Input has additional class hint channel or not.')
+
 # Input name of the exported model.
 _INPUT_NAME = 'ImageTensor'
 
@@ -60,7 +65,7 @@ _INPUT_NAME = 'ImageTensor'
 _OUTPUT_NAME = 'SemanticPredictions'
 
 
-def _create_input_tensors():
+def _create_input_tensors(class_hints=False):
   """Creates and prepares input tensors for DeepLab model.
 
   This method creates a 4-D uint8 image tensor 'ImageTensor' with shape
@@ -77,12 +82,16 @@ def _create_input_tensors():
   input_image = tf.placeholder(tf.uint8, [1, None, None, 3], name=_INPUT_NAME)
   original_image_size = tf.shape(input_image)[1:3]
 
+  if class_hints:
+      raise NotImplementedError("TODO")
+
   # Squeeze the dimension in axis=0 since `preprocess_image_and_label` assumes
   # image to be 3-D.
   image = tf.squeeze(input_image, axis=0)
-  resized_image, image, _ = input_preprocess.preprocess_image_and_label(
+  resized_image, image, _ , _= input_preprocess.preprocess_image_and_label(
       image,
       label=None,
+      hint=None,
       crop_height=FLAGS.crop_size[0],
       crop_width=FLAGS.crop_size[1],
       min_resize_value=FLAGS.min_resize_value,
@@ -104,7 +113,7 @@ def main(unused_argv):
   tf.logging.info('Prepare to export model to: %s', FLAGS.export_path)
 
   with tf.Graph().as_default():
-    image, image_size, resized_image_size = _create_input_tensors()
+    image, image_size, resized_image_size = _create_input_tensors(class_hints=FLAGS.class_hints)
 
     model_options = common.ModelOptions(
         outputs_to_num_classes={common.OUTPUT_TYPE: FLAGS.num_classes},

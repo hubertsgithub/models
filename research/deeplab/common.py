@@ -91,7 +91,7 @@ WIDTH = 'width'
 IMAGE_NAME = 'image_name'
 LABEL = 'label'
 ORIGINAL_IMAGE = 'original_image'
-HINT = 'label' # TODO
+HINT = 'class_hint'
 
 # Test set name.
 TEST_SET = 'test'

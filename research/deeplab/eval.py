@@ -69,8 +69,8 @@ flags.DEFINE_bool('add_flipped_images', False,
 
 # hints=True for image inputs with additional channel for hints
 # TODO incorporate this into ModelOptions
-flags.DEFINE_bool('hints', False,
-                  'Input has additional hint channel or not.')
+flags.DEFINE_bool('class_hints', False,
+                  'Input has additional class hint channel or not.')
 
 # Dataset settings.
 
@@ -108,7 +108,7 @@ def main(unused_argv):
         is_training=False,
         model_variant=FLAGS.model_variant)
 
-    if FLAGS.hints:
+    if FLAGS.class_hints:
         model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
         print '***DEBUG common.HINT is currently set to LABEL in eval.py TODO'
     else:
@@ -124,7 +124,7 @@ def main(unused_argv):
       tf.logging.info('Performing single-scale test.')
       predictions = model.predict_labels(model_inputs, model_options,
                                          image_pyramid=FLAGS.image_pyramid,
-                                         hints=FLAGS.hints)
+                                         hints=FLAGS.class_hints)
     else:
       tf.logging.info('Performing multi-scale test.')
       predictions = model.predict_labels_multi_scale(
@@ -132,7 +132,7 @@ def main(unused_argv):
           model_options=model_options,
           eval_scales=FLAGS.eval_scales,
           add_flipped_images=FLAGS.add_flipped_images,
-          hints=FLAGS.hints)
+          hints=FLAGS.class_hints)
     predictions = predictions[common.OUTPUT_TYPE]
     predictions = tf.reshape(predictions, shape=[-1])
     labels = tf.reshape(samples[common.LABEL], shape=[-1])

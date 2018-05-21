@@ -124,6 +124,12 @@ _MINC_SEGMENTATION_INFORMATION = DatasetDescriptor(
         'train': 14360, # num of samples in images/training
         'val': 1795, # num of samples in images/validation
         'test': 1795, # num of samples in images/test
+        'train_class_hints': 14360, # num of samples in images/training
+        'val_class_hints': 1795, # num of samples in images/validation
+        'test_class_hints': 1795, # num of samples in images/test
+        'train_empty_class_hints': 14360, # num of samples in images/training
+        'val_empty_class_hints': 1795, # num of samples in images/validation
+        'test_empty_class_hints': 1795, # num of samples in images/test
     },
     num_classes=23,
     ignore_label=255,
@@ -218,6 +224,10 @@ def get_dataset(dataset_name, split_name, dataset_dir):
           (), tf.string, default_value=''),
       'image/segmentation/class/format': tf.FixedLenFeature(
           (), tf.string, default_value='png'),
+      'image/hint/class/encoded': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/hint/class/format': tf.FixedLenFeature(
+          (), tf.string, default_value='png')
   }
   items_to_handlers = {
       'image': tfexample_decoder.Image(
@@ -230,6 +240,10 @@ def get_dataset(dataset_name, split_name, dataset_dir):
       'labels_class': tfexample_decoder.Image(
           image_key='image/segmentation/class/encoded',
           format_key='image/segmentation/class/format',
+          channels=1),
+      'class_hint': tfexample_decoder.Image(
+          image_key='image/hint/class/encoded',
+          format_key='image/hint/class/format',
           channels=1),
   }
 
