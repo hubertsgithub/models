@@ -110,7 +110,6 @@ def main(unused_argv):
 
     if FLAGS.class_hints:
         model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
-        print '***DEBUG common.HINT is currently set to LABEL in eval.py TODO'
     else:
         model_inputs = samples[common.IMAGE]
 

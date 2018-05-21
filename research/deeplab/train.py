@@ -197,7 +197,6 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label, hints=Fal
 
   if hints:
       model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
-      print '***DEBUG common.HINT is currently set to LABEL in train.py TODO'
   else:
       model_inputs = samples[common.IMAGE]
   print model_inputs.shape

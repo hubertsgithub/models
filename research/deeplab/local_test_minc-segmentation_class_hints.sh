@@ -52,11 +52,13 @@ MINC_SEGMENTATION_FOLDER="minc-segmentation"
 EXP_FOLDER="exp/test_hint_train_finetune"
 INIT_FOLDER="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/init_models"
 TRAIN_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/${EXP_FOLDER}/train"
+TRAIN_CHKPT_BACKUP_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/${EXP_FOLDER}/train/backup_checkpoints"
 EVAL_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/${EXP_FOLDER}/eval"
 VIS_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/${EXP_FOLDER}/vis"
 EXPORT_DIR="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/${EXP_FOLDER}/export"
 mkdir -p "${INIT_FOLDER}"
 mkdir -p "${TRAIN_LOGDIR}"
+mkdir -p "${TRAIN_CHKPT_BACKUP_LOGDIR}"
 mkdir -p "${EVAL_LOGDIR}"
 mkdir -p "${VIS_LOGDIR}"
 mkdir -p "${EXPORT_DIR}"
@@ -72,7 +74,8 @@ cd "${CURRENT_DIR}"
 MINC_SEGMENTATION_DATASET="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/tfrecord"
 
 # Train 10 iterations.
-NUM_ITERATIONS=10000
+#NUM_ITERATIONS=10000
+NUM_ITERATIONS=$@
 python "${WORK_DIR}"/train.py \
   --logtostderr \
   --train_split="train_class_hints" \
@@ -96,6 +99,7 @@ python "${WORK_DIR}"/train.py \
   --dataset=minc-segmentation \
   --class_hints=True
 
+cp -v ${TRAIN_LOGDIR}/model.ckpt-${NUM_ITERATIONS}* ${TRAIN_CHKPT_BACKUP_LOGDIR}
 
 # Run evaluation. This performs eval over the full val split.
 python "${WORK_DIR}"/eval.py \

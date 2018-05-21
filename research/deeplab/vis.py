@@ -166,16 +166,29 @@ def _process_batch(sess, original_images, semantic_predictions, image_names,
     semantic_prediction = np.squeeze(semantic_predictions[i])
     crop_semantic_prediction = semantic_prediction[:image_height, :image_width]
 
-    # Save image.
-    save_annotation.save_annotation(
-        original_image, save_dir, _IMAGE_FORMAT % (image_id_offset + i),
-        add_colormap=False)
 
-    # Save prediction.
-    save_annotation.save_annotation(
-        crop_semantic_prediction, save_dir,
-        _PREDICTION_FORMAT % (image_id_offset + i), add_colormap=True,
-        colormap_type=FLAGS.colormap_type)
+    image_filename = os.path.basename(image_names[i]).split('.')[0]
+    if image_filename == '':
+        # Save image.
+        save_annotation.save_annotation(
+            original_image, save_dir, _IMAGE_FORMAT % (image_id_offset + i),
+            add_colormap=False)
+        # Save prediction.
+        save_annotation.save_annotation(
+            crop_semantic_prediction, save_dir,
+            _PREDICTION_FORMAT % (image_id_offset + i), add_colormap=True,
+            colormap_type=FLAGS.colormap_type)
+    else:
+        # Save image.
+        save_annotation.save_annotation(
+            original_image, save_dir, image_filename,
+            add_colormap=False)
+        # Save prediction.
+        save_annotation.save_annotation(
+            crop_semantic_prediction, save_dir,
+            image_filename+"_vis", add_colormap=True,
+            colormap_type=FLAGS.colormap_type)
+
 
     if FLAGS.also_save_raw_predictions:
       image_filename = os.path.basename(image_names[i])
@@ -229,7 +242,6 @@ def main(unused_argv):
 
     if FLAGS.class_hints:
         model_inputs = tf.concat([samples[common.IMAGE], tf.to_float(samples[common.HINT])], axis=-1)
-        print '***DEBUG common.HINT is currently set to LABEL in eval.py TODO'
     else:
         model_inputs = samples[common.IMAGE]
 
