@@ -157,6 +157,7 @@ python "${WORK_DIR}"/vis.py \
   --vis_logdir="${VIS_LOGDIR}" \
   --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
   --dataset=minc-segmentation \
+  --colormap_type=minc-segmentation \
   --max_number_of_iterations=1
 
 ## Export the trained checkpoint.

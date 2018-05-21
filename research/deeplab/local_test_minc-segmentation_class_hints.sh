@@ -142,7 +142,8 @@ python "${WORK_DIR}"/vis.py \
   --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
   --dataset=minc-segmentation \
   --class_hints=True \
-  --max_number_of_iterations=1
+  --max_number_of_iterations=1 \
+  --colormap_type=minc-segmentation
 
 ## Export the trained checkpoint.
 #CKPT_PATH="${TRAIN_LOGDIR}/model.ckpt-${NUM_ITERATIONS}"

@@ -85,7 +85,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             % (os.path.join('./',nextname), os.path.join('./',filename) ))
         r.append('<body><a href="%s"><img src="%s"></img></a></body>'\
             % (os.path.join('./',nextname), os.path.join('./',filename_pred) ))
-        r.append('<body><img src="%s" height="500"></a></body>'\
+        r.append('<body><img src="%s" height="350"></a></body>'\
             % ('legend.png'))
         r.append('</html>')
 
