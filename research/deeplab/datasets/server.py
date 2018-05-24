@@ -29,7 +29,7 @@ assert os.path.exists(legend_path)
 print ('#############################################################')
 print ('COPYING LEGEND FROM {} TO {}'.format(legend_path, args.dir))
 print ('#############################################################')
-shutil.copy(legend_path, os.path.join(args.dir, 'legend.png'))
+shutil.copy(legend_path, os.path.join(args.dir, 'zzzlegend.png'))
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -86,7 +86,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         r.append('<body><a href="%s"><img src="%s"></img></a></body>'\
             % (os.path.join('./',nextname), os.path.join('./',filename_pred) ))
         r.append('<body><img src="%s" height="350"></a></body>'\
-            % ('legend.png'))
+            % ('zzzlegend.png'))
+            #% ('legend.png'))
         r.append('</html>')
 
 

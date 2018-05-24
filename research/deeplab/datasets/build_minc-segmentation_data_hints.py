@@ -65,12 +65,26 @@ tf.app.flags.DEFINE_string(
     'Folder containing class hints for test images')
 
 tf.app.flags.DEFINE_string(
+    'om_test_image_folder',
+    './minc-segmentation/images_preprocessed/old_masters_test',
+    'Folder containing test images')
+tf.app.flags.DEFINE_string(
+    'om_test_image_label_folder',
+    './minc-segmentation/labels_preprocessed/old_masters_test',
+    'Folder containing annotations for test images')
+tf.app.flags.DEFINE_string(
+    'om_test_image_class_hint_folder',
+    './minc-segmentation/class_hints_preprocessed/old_masters_test',
+    'Folder containing class hints for test images')
+
+tf.app.flags.DEFINE_string(
     'output_dir', './minc-segmentation/tfrecord',
     'Path to save converted SSTable of Tensorflow example')
 
-_NUM_SHARDS = 4
+#_NUM_SHARDS = 4
+_NUM_SHARDS = 1
 
-def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dataset_hint_dir=None, dummy_hints=False):
+def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dataset_hint_dir=None, dummy_hints=False, dummy_label=False):
   """ Converts the minc-segmentation dataset into into tfrecord format (SSTable).
 
   Args:
@@ -84,13 +98,22 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dataset_hint
   hints = (dataset_hint_dir is not None)
 
   img_names = tf.gfile.Glob(os.path.join(dataset_dir, '*.jpg'))
+  label_names = tf.gfile.Glob(os.path.join(dataset_hint_dir, '*.png'))
+  print len(label_names)
+
+  if len(label_names) < len(img_names):
+    img_names = label_names
+    img_names = [img_name.replace('.png', '.jpg').replace(dataset_hint_dir, dataset_dir) for img_name in img_names]
+    print 'Not every image is labelled; only preprocessing labelled images'
+
   random.shuffle(img_names)
   seg_names = []
   if hints:
     hint_names = []
   for f in img_names:
     # get the filename without the extension
-    basename = os.path.basename(f).split(".")[0]
+    #basename = os.path.basename(f).split(".")[0]
+    basename = os.path.basename(f).split(".png")[0].split(".jpg")[0]
     # cover its corresponding *_seg.png
     seg = os.path.join(dataset_label_dir, basename+'.png')
     seg_names.append(seg)
@@ -123,8 +146,20 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dataset_hint
         height, width = image_reader.read_image_dims(image_data)
 
         # Read the semantic segmentation annotation.
-        seg_filename = seg_names[i]
-        seg_data = tf.gfile.FastGFile(seg_filename, 'r').read()
+        if dummy_label:
+            temp_name = '/tmp/tempfile-{}.png'.format(os.getpid())
+            if not os.path.exists(temp_name):
+                sys.stderr.write('\nCreating temp file {}'.format(temp_name))
+                sys.stderr.flush()
+                sys.stderr.write('\n***REMOVE IF CODE CRASHES***')
+                sys.stderr.flush()
+            seg_data = 255*np.ones((height,width), dtype=np.uint8)
+            seg_data = Image.fromarray(seg_data, mode='L')
+            seg_data.save(temp_name)
+            seg_data = tf.gfile.FastGFile(temp_name, 'r').read()
+        else:
+            seg_filename = seg_names[i]
+            seg_data = tf.gfile.FastGFile(seg_filename, 'r').read()
         seg_height, seg_width = label_reader.read_image_dims(seg_data)
         if height != seg_height or width != seg_width:
           raise RuntimeError('Shape mismatched between image and label.')
@@ -163,37 +198,50 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, dataset_hint
 def main(unused_argv):
   tf.gfile.MakeDirs(FLAGS.output_dir)
 
-  _convert_dataset('train_class_hints',
-                   dataset_dir=FLAGS.train_image_folder,
-                   dataset_label_dir=FLAGS.train_image_label_folder,
-                   dataset_hint_dir=FLAGS.train_image_class_hint_folder,
-                   dummy_hints=False)
-  _convert_dataset('val_class_hints',
-                   dataset_dir=FLAGS.val_image_folder,
-                   dataset_label_dir=FLAGS.val_image_label_folder,
-                   dataset_hint_dir=FLAGS.val_image_class_hint_folder,
-                   dummy_hints=False)
-  _convert_dataset('test_class_hints',
-                   dataset_dir=FLAGS.test_image_folder,
-                   dataset_label_dir=FLAGS.test_image_label_folder,
-                   dataset_hint_dir=FLAGS.test_image_class_hint_folder,
-                   dummy_hints=False)
+  #_convert_dataset('train_class_hints',
+                   #dataset_dir=FLAGS.train_image_folder,
+                   #dataset_label_dir=FLAGS.train_image_label_folder,
+                   #dataset_hint_dir=FLAGS.train_image_class_hint_folder,
+                   #dummy_hints=False)
+  #_convert_dataset('val_class_hints',
+                   #dataset_dir=FLAGS.val_image_folder,
+                   #dataset_label_dir=FLAGS.val_image_label_folder,
+                   #dataset_hint_dir=FLAGS.val_image_class_hint_folder,
+                   #dummy_hints=False)
+  #_convert_dataset('test_class_hints',
+                   #dataset_dir=FLAGS.test_image_folder,
+                   #dataset_label_dir=FLAGS.test_image_label_folder,
+                   #dataset_hint_dir=FLAGS.test_image_class_hint_folder,
+                   #dummy_hints=False)
 
-  _convert_dataset('train_empty_class_hints',
-                   dataset_dir=FLAGS.train_image_folder,
-                   dataset_label_dir=FLAGS.train_image_label_folder,
-                   dataset_hint_dir=FLAGS.train_image_class_hint_folder,
-                   dummy_hints=True)
-  _convert_dataset('val_empty_class_hints',
-                   dataset_dir=FLAGS.val_image_folder,
-                   dataset_label_dir=FLAGS.val_image_label_folder,
-                   dataset_hint_dir=FLAGS.val_image_class_hint_folder,
-                   dummy_hints=True)
-  _convert_dataset('test_empty_class_hints',
-                   dataset_dir=FLAGS.test_image_folder,
-                   dataset_label_dir=FLAGS.test_image_label_folder,
-                   dataset_hint_dir=FLAGS.test_image_class_hint_folder,
-                   dummy_hints=True)
+  #_convert_dataset('train_empty_class_hints',
+                   #dataset_dir=FLAGS.train_image_folder,
+                   #dataset_label_dir=FLAGS.train_image_label_folder,
+                   #dataset_hint_dir=FLAGS.train_image_class_hint_folder,
+                   #dummy_hints=True)
+  #_convert_dataset('val_empty_class_hints',
+                   #dataset_dir=FLAGS.val_image_folder,
+                   #dataset_label_dir=FLAGS.val_image_label_folder,
+                   #dataset_hint_dir=FLAGS.val_image_class_hint_folder,
+                   #dummy_hints=True)
+  #_convert_dataset('test_empty_class_hints',
+                   #dataset_dir=FLAGS.test_image_folder,
+                   #dataset_label_dir=FLAGS.test_image_label_folder,
+                   #dataset_hint_dir=FLAGS.test_image_class_hint_folder,
+                   #dummy_hints=True)
+
+  _convert_dataset('old_masters_test_class_hints',
+                   dataset_dir=FLAGS.om_test_image_folder,
+                   dataset_label_dir=FLAGS.om_test_image_label_folder,
+                   dataset_hint_dir=FLAGS.om_test_image_class_hint_folder,
+                   dummy_hints=False,
+                   dummy_label=True)
+  _convert_dataset('old_masters_test_empty_class_hints',
+                   dataset_dir=FLAGS.om_test_image_folder,
+                   dataset_label_dir=FLAGS.om_test_image_label_folder,
+                   dataset_hint_dir=FLAGS.om_test_image_class_hint_folder,
+                   dummy_hints=True,
+                   dummy_label=True)
 
 if __name__ == '__main__':
   tf.app.run()

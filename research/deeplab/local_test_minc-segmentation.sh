@@ -73,28 +73,28 @@ cd "${CURRENT_DIR}"
 MINC_SEGMENTATION_DATASET="${WORK_DIR}/${DATASET_DIR}/${MINC_SEGMENTATION_FOLDER}/tfrecord"
 
 # Train 10 iterations.
-NUM_ITERATIONS=400000
-python "${WORK_DIR}"/train.py \
-  --logtostderr \
-  --train_split="train" \
-  --model_variant="xception_65" \
-  --atrous_rates=6 \
-  --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
-  --decoder_output_stride=4 \
-  --train_crop_size=513 \
-  --train_crop_size=513 \
-  --resize_factor=16 \
-  --train_batch_size=4 \
-  --training_number_of_steps="${NUM_ITERATIONS}" \
-  --fine_tune_batch_norm=False \
-  --initialize_last_layer=False \
-  --last_layers_contain_logits_only=True \
-  --tf_initial_checkpoint="${INIT_FOLDER}/deeplabv3_pascal_train_aug/model.ckpt" \
-  --train_logdir="${TRAIN_LOGDIR}" \
-  --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
-  --dataset=minc-segmentation
+#NUM_ITERATIONS=400000
+#python "${WORK_DIR}"/train.py \
+#  --logtostderr \
+#  --train_split="train" \
+#  --model_variant="xception_65" \
+#  --atrous_rates=6 \
+#  --atrous_rates=12 \
+#  --atrous_rates=18 \
+#  --output_stride=16 \
+#  --decoder_output_stride=4 \
+#  --train_crop_size=513 \
+#  --train_crop_size=513 \
+#  --resize_factor=16 \
+#  --train_batch_size=4 \
+#  --training_number_of_steps="${NUM_ITERATIONS}" \
+#  --fine_tune_batch_norm=False \
+#  --initialize_last_layer=False \
+#  --last_layers_contain_logits_only=True \
+#  --tf_initial_checkpoint="${INIT_FOLDER}/deeplabv3_pascal_train_aug/model.ckpt" \
+#  --train_logdir="${TRAIN_LOGDIR}" \
+#  --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
+#  --dataset=minc-segmentation
 
 #python "${WORK_DIR}"/train.py \
 #    --logtostderr \
@@ -124,7 +124,7 @@ python "${WORK_DIR}"/train.py \
 # Run evaluation. This performs eval over the full val split.
 python "${WORK_DIR}"/eval.py \
   --logtostderr \
-  --eval_split="val" \
+  --eval_split="test" \
   --model_variant="xception_65" \
   --atrous_rates=6 \
   --atrous_rates=12 \
@@ -140,25 +140,25 @@ python "${WORK_DIR}"/eval.py \
   --dataset=minc-segmentation \
   --max_number_of_evaluations=1
 
-# Visualize the results.
-python "${WORK_DIR}"/vis.py \
-  --logtostderr \
-  --vis_split="val" \
-  --model_variant="xception_65" \
-  --atrous_rates=6 \
-  --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
-  --decoder_output_stride=4 \
-  --vis_crop_size=513 \
-  --vis_crop_size=513 \
-  --resize_factor=16 \
-  --checkpoint_dir="${TRAIN_LOGDIR}" \
-  --vis_logdir="${VIS_LOGDIR}" \
-  --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
-  --dataset=minc-segmentation \
-  --colormap_type=minc-segmentation \
-  --max_number_of_iterations=1
+## Visualize the results.
+#python "${WORK_DIR}"/vis.py \
+#  --logtostderr \
+#  --vis_split="val" \
+#  --model_variant="xception_65" \
+#  --atrous_rates=6 \
+#  --atrous_rates=12 \
+#  --atrous_rates=18 \
+#  --output_stride=16 \
+#  --decoder_output_stride=4 \
+#  --vis_crop_size=513 \
+#  --vis_crop_size=513 \
+#  --resize_factor=16 \
+#  --checkpoint_dir="${TRAIN_LOGDIR}" \
+#  --vis_logdir="${VIS_LOGDIR}" \
+#  --dataset_dir="${MINC_SEGMENTATION_DATASET}" \
+#  --dataset=minc-segmentation \
+#  --colormap_type=minc-segmentation \
+#  --max_number_of_iterations=1
 
 ## Export the trained checkpoint.
 #CKPT_PATH="${TRAIN_LOGDIR}/model.ckpt-${NUM_ITERATIONS}"

@@ -130,6 +130,9 @@ _MINC_SEGMENTATION_INFORMATION = DatasetDescriptor(
         'train_empty_class_hints': 14360, # num of samples in images/training
         'val_empty_class_hints': 1795, # num of samples in images/validation
         'test_empty_class_hints': 1795, # num of samples in images/test
+        'old_masters_test_class_hints': 9, # num of samples in images/test
+        'old_masters_test_empty_class_hints': 9, # num of samples in images/test
+
     },
     num_classes=23,
     ignore_label=255,

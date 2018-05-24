@@ -167,7 +167,8 @@ def _process_batch(sess, original_images, semantic_predictions, image_names,
     crop_semantic_prediction = semantic_prediction[:image_height, :image_width]
 
 
-    image_filename = os.path.basename(image_names[i]).split('.')[0]
+    #image_filename = os.path.basename(image_names[i]).split('.')[0]
+    image_filename = os.path.basename(image_names[i]).split('.png')[0].split('.jpg')[0]
     if image_filename == '':
         # Save image.
         save_annotation.save_annotation(
@@ -333,6 +334,8 @@ def main(unused_argv):
       tf.logging.info(
           'Finished visualization at ' + time.strftime('%Y-%m-%d-%H:%M:%S',
                                                        time.gmtime()))
+      if num_iters == FLAGS.max_number_of_iterations:
+          break
       time_to_next_eval = start + FLAGS.eval_interval_secs - time.time()
       if time_to_next_eval > 0:
         time.sleep(time_to_next_eval)

@@ -101,6 +101,25 @@ python "${WORK_DIR}"/train.py \
 
 cp -v ${TRAIN_LOGDIR}/model.ckpt-${NUM_ITERATIONS}* ${TRAIN_CHKPT_BACKUP_LOGDIR}
 
+#python "${WORK_DIR}"/eval.py \
+  #--logtostderr \
+  #--eval_split="test_empty_class_hints" \
+  #--model_variant="xception_65" \
+  #--atrous_rates=6 \
+  #--atrous_rates=12 \
+  #--atrous_rates=18 \
+  #--output_stride=16 \
+  #--decoder_output_stride=4 \
+  #--eval_crop_size=513 \
+  #--eval_crop_size=513 \
+  #--resize_factor=16 \
+  #--checkpoint_dir="${TRAIN_LOGDIR}" \
+  #--eval_logdir="${EVAL_LOGDIR}" \
+  #--dataset_dir="${MINC_SEGMENTATION_DATASET}" \
+  #--dataset=minc-segmentation \
+  #--max_number_of_evaluations=1 \
+  #--class_hints=True
+
 # Run evaluation. This performs eval over the full val split.
 python "${WORK_DIR}"/eval.py \
   --logtostderr \

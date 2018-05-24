@@ -53,7 +53,8 @@ def _get_data(data_provider, dataset_split):
     image_name = tf.constant('')
 
   label = None
-  if dataset_split != common.TEST_SET:
+  print 'DEBUG REMOVE IN INPUTS GENERATPR PY TEST LABWLS'
+  if True or dataset_split != common.TEST_SET:
     label, = data_provider.get([common.LABELS_CLASS])
 
   hint = None
